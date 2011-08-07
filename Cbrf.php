@@ -1,5 +1,5 @@
 <?php 
-/** test
+/**
  * Класс для определения официального курса валют относительно рубля
  * 
  * Курсы беруться с официального сайта ЦБ РФ.
@@ -157,6 +157,6 @@ class Cbrf
 	 */
 	protected function cacheDate()
 	{
-		return date('Ymd');
+		return date($this->cacheDate);
 	}
 }
