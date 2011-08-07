@@ -42,7 +42,7 @@ class Cbrf
 	 */
 	private $_currencyArray = array();
 	/**
-	 * Класс отвечающий за кэш, наследник CCahche
+	 * Класс отвечающий за кэш, реализующий ICahche
 	 * @var ICache $cache
 	 */
 	private $_cache;
