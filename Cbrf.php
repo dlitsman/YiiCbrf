@@ -51,7 +51,7 @@ class Cbrf
 	 * @param string $currency
 	 * @return float
 	 */
-	public function getCurrencyRate($currency)
+	public function getRate($currency)
 	{
 		if (isset($this->_currencyArray[$currency])) {
 			return $this->_currencyArray[$currency];	
@@ -65,9 +65,17 @@ class Cbrf
 	 * @param string $currency Буквенный код валюты
 	 * @return float
 	 */
-	public function getCurrencyValue($value, $currency)
+	public function getValue($value, $currency)
 	{
-		return $value * $this->getCurrencyRate($currency);
+		return $value * $this->getRate($currency);
+	}
+	/**
+	 * Получить список всех котировок
+	 * @return array
+	 */
+	public function getRates()
+	{
+		return $this->_currencyArray;
 	}
 	/**
 	 * Инициализируем класс
