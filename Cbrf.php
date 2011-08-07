@@ -6,11 +6,40 @@
  * Поддерживается кэш. Есть возможность использовать как системный кэш, так
  * и внутренний на основе CFileCache или другого класса
  * 
- * @todo Повысить точность операций с плавающей точкой?
- * @todo Где лучше хранить кэш, внутри расширения, или в runtime?
+ * Использование
+ * 
+ * Для установки необходимо прописать в списке компонентов в конфигурационном файле
+ *	'import'=>array(
+ *		'application.models.*',
+ *		'application.components.*',
+ *		'application.extensions.cbrf.*', // папка с классом
+ *	),
+ *	
+ * Далее добавить как компонент
+ *	'components'=>array(
+ *		'cbrf' => array(
+ *			'class' => 'Cbrf',
+ *			'defaultCurrency' => 'EUR',
+ *		),
+ *		
+ * Внутри приложения можно использовать в виде
+ * 
+ *	Yii::app()->cbrf->getValue(1000, 'USD')
+ * вернет стоимость 1000 долларов в рублях
+ *	Yii::app()->cbrf->getValue(1000)
+ * вернет стоимость 1000 евро в рублях
+ *	Yii::app()->cbrf->getRate('USD')
+ * вернет курс доллара по отношению к рублю
+ *	Yii::app()->cbrf->getRates()
+ * вернет с массивом курсов
  */
 class Cbrf
 {
+	/**
+	 * Валюта по умолчанию для короткой записи
+	 * @var string
+	 */
+	public $defaultCurrency = 'USD';
 	/**
 	 * URL источника
 	 * @var string
@@ -65,8 +94,9 @@ class Cbrf
 	 * @param string $currency Буквенный код валюты
 	 * @return float
 	 */
-	public function getValue($value, $currency)
+	public function getValue($value, $currency = false)
 	{
+		if (!$currency) $currency = $this->defaultCurrency;
 		return $value * $this->getRate($currency);
 	}
 	/**
@@ -164,7 +194,7 @@ class Cbrf
 	 * @return string
 	 */
 	protected function cacheDate()
-	{
+	{ 
 		return date($this->cacheDate);
 	}
 }
