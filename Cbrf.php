@@ -63,6 +63,7 @@
  *	Yii::app()->cbrf->getRates()
  * вернет с массивом курсов
  * 
+ * @todo Добавить небольшую отсрочку кэшу
  */
 class Cbrf
 {
@@ -77,10 +78,10 @@ class Cbrf
 	 */
 	public $sourceUrl = 'http://www.cbr.ru/scripts/XML_daily.asp';
 	/**
-	 * Разрешить использование глобального кэша?
-	 * @var boolean
+	 * Использовать компонент в системе Yii::app()->{$cacheId}
+	 * @var string
 	 */
-	public $globalCache = true;
+	public $cahceId = 'cache';
 	/**
 	 * Класс кэша по умоланию, если не используется стандартный общесистемный
 	 * @var string
@@ -116,7 +117,7 @@ class Cbrf
 		if (isset($this->_currencyArray[$currency])) {
 			return $this->_currencyArray[$currency];	
 		} else {
-			throw new Exception('Uknown currency ' . $currency);
+			throw new CbrfException('Uknown currency ' . $currency);
 		}
 	}
 	/**
@@ -144,9 +145,9 @@ class Cbrf
 	public function init()
 	{
 		// Если есть общесистемный кэш используем его
-		if ($this->globalCache && Yii::app()->cache !== null && Yii::app()->cache instanceof ICache)
+		if (Yii::app()->{$this->cahceId})
 		{
-			$this->setCache(Yii::app()->cache);
+			$this->setCache(Yii::app()->{$this->cahceId});
 		}
 		else // Иначе создаем внутренний кэш 
 		{
@@ -173,7 +174,7 @@ class Cbrf
 	{
 		if (!$cache instanceof ICache) 
 		{
-			throw new Exception('Cache must be instance of ICache');
+			throw new CbrfException('Cache must be instance of ICache');
 		}
 		$this->_cache = $cache;
 	}
@@ -199,13 +200,13 @@ class Cbrf
 				$name = $arr[1][$i];
 				
 				if (empty($value) || empty($name)) {
-					throw new Exception('Data from sourceUrl is broken');
+					throw new CbrfException('Data from sourceUrl is broken');
 				}
 				
 				$this->_currencyArray[$name] = $value;
 			}
 		} else {
-			throw new Exception('Data from sourceUrl is broken');
+			throw new CbrfException('Data from sourceUrl is broken');
 		}
 	}
 	protected function loadDataFromCache()
@@ -228,4 +229,9 @@ class Cbrf
 	{ 
 		return date($this->cacheDate);
 	}
+}
+
+class CbrfException extends CException
+{
+	
 }
