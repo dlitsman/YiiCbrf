@@ -83,7 +83,7 @@ class Cbrf
 	 */
 	public $cahceId = 'cache';
 	/**
-	 * Класс кэша по умоланию, если не используется стандартный общесистемный
+	 * Класс кэша по умоланию, если не используется стандартный компонент в системе
 	 * @var string
 	 */
 	public $cacheClass = 'CFileCache';
@@ -211,7 +211,7 @@ class Cbrf
 	}
 	protected function loadDataFromCache()
 	{
-		$this->_currencyArray = unserialize($this->_cache->get('cbrf_currency'));
+		$this->_currencyArray = $this->_cache->get('cbrf_currency');
 	}
 	/**
 	 * Записать в кэш текущие значения
@@ -219,7 +219,7 @@ class Cbrf
 	protected function prepareCache()
 	{
 		$this->_cache->set('cbrf_date', $this->cacheDate(), $this->cacheTime);
-		$this->_cache->set('cbrf_currency', serialize($this->_currencyArray), $this->cacheTime);
+		$this->_cache->set('cbrf_currency', $this->_currencyArray, $this->cacheTime);
 	}
 	/**
 	 * Формат данных для проверки устаревания кэша
