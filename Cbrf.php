@@ -63,7 +63,6 @@
  *	Yii::app()->cbrf->getRates()
  * вернет с массивом курсов
  * 
- * @todo Добавить небольшую отсрочку кэшу
  */
 class Cbrf
 {
@@ -87,11 +86,6 @@ class Cbrf
 	 * @var string
 	 */
 	public $cacheClass = 'CFileCache';
-	/**
-	 * Время, в секундах, через которое кэш точно устареет
-	 * @var int
-	 */
-	public $cacheTime = 86400;
 	/**
 	 * Дата в формате date() при наступлении которой кэш устаревает
 	 * @var string
@@ -164,7 +158,7 @@ class Cbrf
 		{
 			if(($result = $this->loadDataFromSource()) === true) 
 			{
-				$this->getCache()->set('cbrf_currency', $this->_currencyArray, $this->cacheTime, new CbrfDateDependency($this->cacheDateString));
+				$this->getCache()->set('cbrf_currency', $this->_currencyArray, 0, new CbrfDateDependency($this->cacheDateString));
 				// Если курс валют не поменялся с предыдущего обновления
 				if ($this->getCache()->get('cbrf_currency_out_of_date') && $this->getCache()->get('cbrf_currency_out_of_date') === $this->getCache()->get('cbrf_currency'))
 				{
