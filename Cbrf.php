@@ -63,7 +63,8 @@
  *	Yii::app()->cbrf->getRates()
  * вернет с массивом курсов
  * 
- * @todo Протестировать + подумать над Exception 
+ * @todo Протестировать + подумать над Exception
+ * @todo Добавить какую-то функцию/переменную для CbrfOutOfDateException
  */
 class Cbrf
 {
