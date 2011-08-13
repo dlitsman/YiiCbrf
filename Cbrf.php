@@ -65,6 +65,7 @@
  * 
  * @todo Протестировать + подумать над Exception
  * @todo Добавить какую-то функцию/переменную для CbrfOutOfDateException
+ * @todo Написать readme!
  */
 class Cbrf
 {
