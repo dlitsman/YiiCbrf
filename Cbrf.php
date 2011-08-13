@@ -63,6 +63,7 @@
  *	Yii::app()->cbrf->getRates()
  * вернет с массивом курсов
  * 
+ * @todo Протестировать + подумать над Exception 
  */
 class Cbrf
 {
