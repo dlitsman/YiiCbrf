@@ -217,9 +217,6 @@ class Cbrf
 	}
 }
 
-class CbrfException extends CException {}
-class CbrfOutOfDateException extends CbrfException {}
-
 /**
  * Зависиомть кэша от даты в формате date()
  */
@@ -246,3 +243,6 @@ class CbrfDateDependency extends CCacheDependency
 		return date($this->dateString);
 	}
 }
+
+class CbrfException extends CException {}
+class CbrfOutOfDateException extends CbrfException {}
