@@ -98,6 +98,11 @@ class Cbrf
 	 */
 	public $cacheDateString = 'Ymd';
 	/**
+	 * Генерировать CbrfOutOfDateException или по возможности брать предыдущие значения
+	 * @var unknown_type
+	 */
+	public $generateCbrfOutOfDateException = false;
+	/**
 	 * Системный массив с валютами в формате [currencyCode] => value
 	 * @var array
 	 */
@@ -157,7 +162,7 @@ class Cbrf
 		
 		if (!($this->_currencyArray = $this->_cache->get('cbrf_currency')))
 		{
-			if($this->loadDataFromSource() === true) 
+			if(($result = $this->loadDataFromSource()) === true) 
 			{
 				$this->getCache()->set('cbrf_currency', $this->_currencyArray, $this->cacheTime, new CbrfDateDependency($this->cacheDateString));
 				// Если курс валют не поменялся с предыдущего обновления
@@ -166,6 +171,10 @@ class Cbrf
 					$this->getCache()->delete('cbrf_currency');
 				}
 				$this->getCache()->set('cbrf_currency_out_of_date', $this->_currencyArray);
+			}
+			else if ($this->generateCbrfOutOfDateException)
+			{
+				throw new CbrfOutOfDateException($result);
 			}
 			else // Извлекаем устаревшие данные 
 			{
@@ -214,6 +223,7 @@ class Cbrf
 }
 
 class CbrfException extends CException {}
+class CbrfOutOfDateException extends CbrfException {}
 
 /**
  * Зависиомть кэша от даты в формате date()
