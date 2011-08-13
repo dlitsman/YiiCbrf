@@ -162,11 +162,13 @@ class Cbrf
 			if(($result = $this->loadDataFromSource()) === true) 
 			{
 				$this->getCache()->set('cbrf_currency', $this->_currencyArray, 0, new CbrfDateDependency($this->cacheDateString));
+				
 				// Если курс валют не поменялся с предыдущего обновления
 				if ($this->getCache()->get('cbrf_currency_out_of_date') && $this->getCache()->get('cbrf_currency_out_of_date') === $this->getCache()->get('cbrf_currency'))
 				{
 					$this->getCache()->delete('cbrf_currency');
 				}
+				
 				$this->getCache()->set('cbrf_currency_out_of_date', $this->_currencyArray);
 			}
 			else if ($this->generateCbrfOutOfDateException)
