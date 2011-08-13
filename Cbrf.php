@@ -63,7 +63,6 @@
  *	Yii::app()->cbrf->getRates()
  * вернет с массивом курсов
  * 
- * @todo Добавить небольшую отсрочку кэшу
  */
 class Cbrf
 {
@@ -88,15 +87,15 @@ class Cbrf
 	 */
 	public $cacheClass = 'CFileCache';
 	/**
-	 * Время, в секундах, через которое кэш точно устареет
-	 * @var int
-	 */
-	public $cacheTime = 86400;
-	/**
-	 * Строка в формате date() для определения частоты обновления кэша
+	 * Дата в формате date() при наступлении которой кэш устаревает
 	 * @var string
 	 */
-	public $cacheDate = 'Ymd';
+	public $cacheDateString = 'Ymd';
+	/**
+	 * Генерировать CbrfOutOfDateException или по возможности брать предыдущие значения
+	 * @var unknown_type
+	 */
+	public $generateCbrfOutOfDateException = false;
 	/**
 	 * Системный массив с валютами в формате [currencyCode] => value
 	 * @var array
@@ -155,15 +154,26 @@ class Cbrf
 			$this->getCache()->init();
 		}
 		
-		$last_date = $this->_cache->get('cbrf_date');
-		if ($last_date == $this->cacheDate())
+		if (!($this->_currencyArray = $this->_cache->get('cbrf_currency')))
 		{
-			$this->loadDataFromCache();
-		}
-		else
-		{
-			$this->loadData();
-			$this->prepareCache();
+			if(($result = $this->loadDataFromSource()) === true) 
+			{
+				$this->getCache()->set('cbrf_currency', $this->_currencyArray, 0, new CbrfDateDependency($this->cacheDateString));
+				// Если курс валют не поменялся с предыдущего обновления
+				if ($this->getCache()->get('cbrf_currency_out_of_date') && $this->getCache()->get('cbrf_currency_out_of_date') === $this->getCache()->get('cbrf_currency'))
+				{
+					$this->getCache()->delete('cbrf_currency');
+				}
+				$this->getCache()->set('cbrf_currency_out_of_date', $this->_currencyArray);
+			}
+			else if ($this->generateCbrfOutOfDateException)
+			{
+				throw new CbrfOutOfDateException($result);
+			}
+			else // Извлекаем устаревшие данные 
+			{
+				$this->_currencyArray = $this->getCache()->get('cbrf_currency_out_of_date');
+			}
 		}
 	}
 	/**
@@ -185,53 +195,53 @@ class Cbrf
 	{
 		return $this->_cache;
 	}
-	protected function loadData()
+	/**
+	 * Загрузить данные от источника
+	 * @return mixed true если все успешно, иначе string с сообщением об ошибке
+	 */
+	protected function loadDataFromSource()
 	{
-		// Получаем значение от источника
-		$str = file_get_contents($this->sourceUrl);
+		$xml = @simplexml_load_file($this->sourceUrl);
+		if (!$xml) return 'Data from sourceUrl is broken';
 		
-		// Выбираем необходимые значения
-		preg_match_all('|<CharCode>(.*)</CharCode>[\W]*<Nominal>(.*)</Nominal>[\W]*<Name>.*</Name>[\W]*<Value>(.*)</Value>|iU', $str, $arr);
-		
-		// Проверяем загрузились ли корректно значения
-		if (is_array($arr[3]) && count($arr[3]) > 0) {
-			for ($i = 0; $i < count($arr[0]); $i++) {
-				$value = str_replace(',', '.', $arr[3][$i]) / $arr[2][$i];
-				$name = $arr[1][$i];
-				
-				if (empty($value) || empty($name)) {
-					throw new CbrfException('Data from sourceUrl is broken');
-				}
-				
-				$this->_currencyArray[$name] = $value;
-			}
-		} else {
-			throw new CbrfException('Data from sourceUrl is broken');
+		foreach ($xml->{'Valute'} as $valute) 
+		{
+			$value = str_replace(',', '.', $valute->{'Value'}) / $valute->{'Nominal'};
+			$this->_currencyArray[current($valute->{'CharCode'})] = $value;	
 		}
-	}
-	protected function loadDataFromCache()
-	{
-		$this->_currencyArray = $this->_cache->get('cbrf_currency');
-	}
-	/**
-	 * Записать в кэш текущие значения
-	 */
-	protected function prepareCache()
-	{
-		$this->_cache->set('cbrf_date', $this->cacheDate(), $this->cacheTime);
-		$this->_cache->set('cbrf_currency', $this->_currencyArray, $this->cacheTime);
-	}
-	/**
-	 * Формат данных для проверки устаревания кэша
-	 * @return string
-	 */
-	protected function cacheDate()
-	{ 
-		return date($this->cacheDate);
+		
+		if (empty($this->_currencyArray)) return 'Data from sourceUrl is broken';
+		
+		return true;
 	}
 }
 
-class CbrfException extends CException
+class CbrfException extends CException {}
+class CbrfOutOfDateException extends CbrfException {}
+
+/**
+ * Зависиомть кэша от даты в формате date()
+ */
+class CbrfDateDependency extends CCacheDependency
 {
-	
+	/**
+	 * Дата для организации зависиости
+	 * @var string
+	 */
+	public $dateString;
+	/**
+	 * Конструктор
+	 * @param string $dateString строка в формате date()
+	 */
+	public function __construct($dateString = 'Ymd')
+	{
+		$this->dateString = $dateString;
+	}
+	/**
+	 * Генерируем зависмость
+	 */
+	protected function generateDependentData()
+	{
+		return date($this->dateString);
+	}
 }
